@@ -119,3 +119,41 @@ def forward(rootNode):
                 value_process.strip(" + "),
                 str(node.partial_derivative.__round__(3)))
             )
+
+
+def reverse_topological_order(output_node):
+    ordering, visited = [], set()
+
+    def visit(node):
+        if node not in visited:
+            visited.add(node)
+            ordering.append(node)
+            for parent in node.parent_nodes:
+                visit(parent)
+
+    visit(output_node)
+    return ordering
+
+def backward(output_node):
+    """
+    Reverse-mode AD: compute d(output)/d(node) for all nodes reachable from output_node.
+    After this call, node.partial_derivative holds the adjoint (∂output/∂node).
+    """
+    #Get reverse topological ordering
+    ordering = reverse_topological_order(output_node)
+
+    #Reset all adjoints to zero
+    for node in ordering:
+        node.partial_derivative = 0.0
+
+    #Seed the output gradient
+    output_node.partial_derivative = 1.0
+
+    #Traverse in order (output -> inputs) to propagate gradients
+    for node in ordering:
+        v_bar = node.partial_derivative
+        # propagate to parents using stored local derivatives
+        for i, parent in enumerate(node.parent_nodes):
+            local_grad = node.grad_wrt_parents[i]
+            contrib = v_bar * local_grad
+            parent.partial_derivative += contrib
