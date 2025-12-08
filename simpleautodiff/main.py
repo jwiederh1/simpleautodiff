@@ -106,3 +106,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+class VJPNode:
+    _bla: any
+
+class Box:
+    # (e.g., a number, a list, or a NumPy array)
+    _value:  any
+
+    # A pointer to the graph node that created this Box.
+    # This is the "breadcrumb" that links the tape together.
+    _node:   VJPNode
+
+    # The ID for the current differentiation pass.
+    _trace:  int
